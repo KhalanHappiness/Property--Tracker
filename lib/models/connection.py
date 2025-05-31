@@ -40,7 +40,22 @@ class Connection(Base):
         connection = cls(agent_id = agent_id, land_buyer_id = land_buyer_id)
         session.add(connection)
         session.commit()
-        return connection    
+        return connection 
+    
+    @classmethod   
+    def get_all(cls, session):
+        return session.query(cls).all()
+    
+    @classmethod
+    def find_by_id(cls, session, connection_id):
+        return session.query(cls).filter_by(id = connection_id).all()
+    
+    def delete(self,session):
+        session.delete(self)
+        session.commit()
+
+    def __repr__(self):
+        return f"Connection( agent_id={self.agent_id}, land_buyer_id = {self.land_buyer_id} )"
 
 
 
