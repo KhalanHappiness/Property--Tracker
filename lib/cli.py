@@ -3,6 +3,7 @@ from models.agent import Agent
 from models.connection import Connection
 from models.listing import Listing
 from models.base import Session
+session = Session()
 
 class PropertyTrackerCLI:
 
@@ -106,13 +107,13 @@ class PropertyTrackerCLI:
 
     def find_land_buyer_by_id(self):
         print("\n--- FIND LAND BUYER BY ID ---")
-        land_buyer_id = self.safe_int_input("Enter user ID: ")
+        land_buyer_id = self.safe_int_input("Enter land buyer ID: ")
         buyer = LandBuyer.find_by_id(self.session, land_buyer_id)
         if buyer:
             print(f"Land Buyer found:")
             print(f"   {buyer.buyer_info}")
         else:
-            print(f" User with ID {land_buyer_id} not found.")
+            print(f" land buyer with ID {land_buyer_id} not found.")
 
     def delete_land_buyer(self):
         print("\n--- DELETE LAND BUYER ---")
@@ -248,8 +249,69 @@ class PropertyTrackerCLI:
                 print(f"   {agent.full_info}")
         else:
             print(f"No agents found withname containing '{agent_name}'.")
-    
 
-    
-
+    #CONNECTION MANAGEMENT
+    def connections_management(self):
+        while True:
+            self.display_entity_menu("Connections")
+            choice = self.get_user_choice(4)
             
+            if choice == 1:
+                self.create_connection()
+            elif choice == 2:
+                self.view_all_connections()
+            elif choice == 3:
+                self.find_connection_by_id()
+            elif choice == 4:
+                self.delete_connection()
+            elif choice == 0:
+                break
+
+    def create_connection(self):
+        print("\n--- CREATE CONNECTION ---")
+        try:
+            land_buyer_id = self.safe_int_input("Enter land buyer ID: ")
+            agent_id = self.safe_int_input("Enter agent ID: ")
+           
+            connection = Connection.create(self.session, land_buyer_id, agent_id)
+            print(f"connection created successfully!")
+            print(f"   {connection.full_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+    
+    def view_all_connections(self):
+        print("\n--- ALL connectionS ---")
+        connections = Connection.get_all(self.session)
+        if not connections:
+            print("No connections found.")
+        else:
+            for connection in connections:
+                print(f"   {connection.full_info}")
+    
+    def find_connection_by_id(self):
+        print("\n--- FIND connection BY ID ---")
+        connection_id = self.safe_int_input("Enter connection ID: ")
+        connection = Connection.find_by_id(self.session, connection_id)
+        if connection:
+            print(f"connection found:")
+            print(f"   {connection.full_info}")
+        else:
+            print(f"connection with ID {connection_id} not found.")
+    
+    def delete_connection(self):
+        print("\n--- DELETE connection ---")
+        connection_id = self.safe_int_input("Enter connection ID to delete: ")
+        connection = Connection.find_by_id(self.session, connection_id)
+        if connection:
+            print(f"connection to delete: {connection.full_info}")
+            confirm = input("Are you sure? (yes/no): ").lower()
+            if confirm == 'yes':
+                connection.delete(self.session)
+                print("connection deleted successfully!")
+            else:
+                print("Deletion cancelled.")
+        else:
+            print(f"connection with ID {connection_id} not found.")
+    
+
+    

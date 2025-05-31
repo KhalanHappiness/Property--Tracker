@@ -13,9 +13,19 @@ class Connection(Base):
     agent_id = Column(Integer, ForeignKey('agents.id'), nullable=False)
     land_buyer_id = Column(Integer, ForeignKey('land_buyers.id'), nullable=False)
     created_at = Column(DateTime, default=func.now())
+
     #relationships
     agent = relationship("Agent", back_populates="connections")
     land_buyer = relationship("LandBuyer", back_populates="connections")
+
+    @property
+    def full_info(self):
+        """Returns basic connection information"""
+        agent_name = self.agent.name if self.agent else f"Agent ID: {self.agent_id}"
+        buyer_name = self.land_buyer.name if self.land_buyer else f"Buyer ID: {self.land_buyer_id}"
+        created = self.created_at.strftime('%Y-%m-%d') if self.created_at else 'Unknown'
+        
+        return f"Connection #{self.id}: {agent_name} ↔ {buyer_name} (Created: {created})"
 
     @classmethod
     def create(cls, session, agent_id,  land_buyer_id):
