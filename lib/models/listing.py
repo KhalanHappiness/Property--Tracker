@@ -8,7 +8,7 @@ class Listing(Base):
 
     id = Column(Integer, primary_key=True)
     agent_id = Column(Integer,ForeignKey('agents.id'), nullable=False)
-    address = Column(String(25), nullable=False)
+    address = Column(String(100), nullable=False)
     price = Column(Numeric(10,2), nullable=False)
     size = Column(String(20), nullable=True)
     description = Column(Text, nullable=True)
@@ -38,7 +38,7 @@ class Listing(Base):
         if not address or len(address.strip()) < 5:
             raise ValueError("address must be at least 5 characters long")
         
-        # Validate mechanic exists
+        # Validate agent exists
         agent = Agent.find_by_id(session, agent_id)
         if not agent:
             raise ValueError(f"agent with ID {agent_id} not found")
@@ -51,7 +51,7 @@ class Listing(Base):
             address=address.strip(),
             price=float(price) if price is not None else None,
             size = size,
-            descriptione = description,
+            description = description,
             is_available=bool(is_available)
         )
         session.add(listing)
@@ -74,7 +74,7 @@ class Listing(Base):
         session.delete(self)
         session.commit()
 
-    def __repre__(self):
+    def __repr__(self):
         return f"Listing(id = {self.id}, address={self.address}, price={self.price})"
         
 
