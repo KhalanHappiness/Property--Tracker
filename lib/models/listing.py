@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -11,7 +11,8 @@ class Listing(Base):
     address = Column(String(25), nullable=False)
     price = Column(Numeric(10,2), nullable=False)
     size = Column(String(20), nullable=True)
-    description = Column(String(50), nullable=True)
+    description = Column(Text, nullable=True)
+    is_available = Column(Boolean, default=True)
 
     agent = relationship("Agent", back_populates="listings")
 
