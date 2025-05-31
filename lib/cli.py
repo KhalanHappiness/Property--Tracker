@@ -314,4 +314,105 @@ class PropertyTrackerCLI:
             print(f"connection with ID {connection_id} not found.")
     
 
+    # LISTINGS MANAGEMENT
+    def listings_management(self):
+        while True:
+            self.display_entity_menu("Listings")
+            choice = self.get_user_choice(4)
+            
+            if choice == 1:
+                self.create_listing()
+            elif choice == 2:
+                self.view_all_listings()
+            elif choice == 3:
+                self.find_listing_by_id()
+            elif choice == 4:
+                self.delete_listing()
+            elif choice == 0:
+                break
+    
+    def create_listing(self):
+        print("\n--- CREATE Listing ---")
+        try:
+            agent_id = self.safe_int_input("Enter agent ID: ")
+            address = self.safe_input("Enter property address: ")
+            size = self.safe_input("Enter property size: ", required=False)
+            price = self.safe_float_input("Enter price (optional): ", required=False)
+            description = self.safe_input("Enter description (optional): ", required=False)
+            is_available = input("Is listing available? (y/n, default y): ").lower() != 'n'
+            
+            listing = Listing.create(self.session, agent_id, address, price, size, description, is_available)
+            print(f"Listing created successfully!")
+            print(f"   {listing.full_info}")
+        except ValueError as e:
+            print(f" Error: {e}")
+    
+    def view_all_listings(self):
+        print("\n--- ALL ListingS ---")
+        listings = Listing.get_all(self.session)
+        if not listings:
+            print("No Listings found.")
+        else:
+            for listing in listings:
+                print(f"   {listing.full_info}")
+    
+    def find_listing_by_id(self):
+        print("\n--- FIND LISTING BY ID ---")
+        listing_id = self.safe_int_input("Enter listing ID: ")
+        listing = Listing.find_by_id(self.session, listing_id)
+        if listing:
+            print(f"Listing found:")
+            print(f"   {listing.full_info}")
+        else:
+            print(f" Listing with ID {listing_id} not found.")
+    
+    def delete_listing(self):
+        print("\n--- DELETE LISTING ---")
+        listing_id = self.safe_int_input("Enter listing ID to delete: ")
+        listing = Listing.find_by_id(self.session, listing_id)
+        if listing:
+            print(f"Listing to delete: {listing.full_info}")
+            confirm = input("Are you sure? (yes/no): ").lower()
+            if confirm == 'yes':
+                listing.delete(self.session)
+                print(" Listing deleted successfully!")
+            else:
+                print(" Deletion cancelled.")
+        else:
+            print(f" Listing with ID {listing_id} not found.")
+
+    def run(self):
+        print(" Welcome to Property Tracker CLI!")
+        try:
+            while True:
+                self.display_main_menu()
+                choice = self.get_user_choice(5)
+                
+                if choice == 1:
+                    self.land_buyer_management()
+                elif choice == 2:
+                    self.agent_management()
+                elif choice == 3:
+                    self.connections_management()
+                elif choice == 4:
+                    self.listings_management()
+                elif choice == 5:
+                    print("\n Thank you for using Property CLI!")
+                    break
+        except KeyboardInterrupt:
+            print("\n\n Goodbye!")
+        except Exception as e:
+            print(f"\n An unexpected error occurred: {e}")
+        finally:
+            self.session.close()
+
+    
+
+    
+
+    
+
+            
+
+
     
