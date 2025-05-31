@@ -17,7 +17,7 @@ class LandBuyer(Base):
 
     @property
     def buyer_info(self):
-        return f"ID: {self.id}, Name: {self.name}, Email:{self.email}, phone:{self.phone or 'N/A'}"
+        return f"Id: {self.id}, Name: {self.name}, Email:{self.email}, Phone:{self.phone or 'N/A'}"
     
     @staticmethod
     def validate_email(email):
