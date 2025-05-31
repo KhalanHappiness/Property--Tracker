@@ -17,7 +17,7 @@ class Agent(Base):
     listings = relationship("Listing", back_populates="agent", cascade="all, delete-orphan")
     connections = relationship("Connection", back_populates="agent", cascade="all, delete-orphan")
 
-    #input validation
+    
     @property
     def full_info(self):
         return f"Id: {self.id,}, Name:{self.name}, lisense_number:{self.lisense_number}, Email:{self.email}, Phone:{self.phone}"
@@ -30,6 +30,7 @@ class Agent(Base):
     def connection_count(self):
         return len(self.connections)
     
+    #input validation
     @staticmethod
     def validate_email(email):
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -51,6 +52,9 @@ class Agent(Base):
         
         if not cls.validate_email(email):
             raise ValueError("Invalid email format")
+        
+        if phone and not cls.validate_phone(phone):
+            raise ValueError("Invalid phone format. Use XXX-XXX-XXXX, (XXX) XXX-XXXX, or XXXXXXXXXX")
         
         
         # Check if email already exists
@@ -74,6 +78,28 @@ class Agent(Base):
         session.add(agent)
         session.commit()
         return agent
+    
+    @classmethod
+    def get_all(cls, session):
+        return session.query(cls).all()
+    
+    @classmethod
+    def find_by_id(cls, session, agent_id):
+        return session.query(cls).filter_by(id=agent_id).first()
+    
+    @classmethod
+    def find_by_lisence(cls, session, input_lisence):
+        return session.query(cls).filter_by(lisence_number=input_lisence).first()
+    
+    def delete(self, session):
+        session.delete(self)
+        session.commit()
+
+    def __repr__ (self):
+        return Agent(f"id={self.id}, name={self.name}, lisence= {self.lisense_number} email={self.email}")
+    
+
+ 
     
     
 
