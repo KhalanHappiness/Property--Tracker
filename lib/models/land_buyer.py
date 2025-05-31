@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
+import re
 from .base import Base
 
 class LandBuyer(Base):
@@ -11,4 +12,46 @@ class LandBuyer(Base):
     email = Column(String, unique=True, nullable=False)
     phone = Column(String(20), nullable=True)
 
+    #Relationship
     connections = relationship("Connection", back_populates="land_buyer", cascade="all, delete-orphan")
+
+    @property
+    def buyer_info(self):
+        return f"ID: {self.id}, Name: {self.name}, Email:{self.email}, phone:{self.phone or 'N/A'}"
+    
+    @staticmethod
+    def validate_email(email):
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+    
+    @staticmethod
+    def validate_phone(phone):
+        if not phone:
+            return True  # Phone is optional
+        pattern = r'^\d{3}-\d{3}-\d{4}$|^\(\d{3}\)\s*\d{3}-\d{4}$|^\d{10}$'
+        return re.match(pattern, phone) is not None
+    
+    @classmethod
+    def create(cls, session, name, email, phone=None):
+        if not name or len(name.strip()) < 2:
+            raise ValueError("Name must be at least 2 characters long")
+        
+        if not cls.validate_email(email):
+            raise ValueError("Invalid email format")
+        
+        if phone and not cls.validate_phone(phone):
+            raise ValueError("Invalid phone format. Use XXX-XXX-XXXX, (XXX) XXX-XXXX, or XXXXXXXXXX")
+        
+        # Check if email already exists
+        existing = session.query(cls).filter_by(email=email).first()
+        if existing:
+            raise ValueError("Email already exists")
+        
+        user = cls(name=name.strip(), email=email.strip(), phone=phone)
+        session.add(user)
+        session.commit()
+        return user
+    
+    
+
+    
