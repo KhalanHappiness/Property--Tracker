@@ -9,8 +9,8 @@ class Agent(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    lisense_number = Column(String(25), unique=True,nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    license_number = Column(String(25), unique=True,nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
     phone = Column(String(20), nullable=True)
 
     #relationships
@@ -20,7 +20,7 @@ class Agent(Base):
     
     @property
     def full_info(self):
-        return f"Id: {self.id,}, Name:{self.name}, lisense_number:{self.lisense_number}, Email:{self.email}, Phone:{self.phone}"
+        return f"Id: {self.id}, Name:{self.name}, license_number:{self.license_number}, Email:{self.email}, Phone:{self.phone}"
     
     @property
     def listing_count(self):
@@ -44,11 +44,11 @@ class Agent(Base):
         return re.match(pattern, phone) is not None
     
     @classmethod
-    def create(cls, session, name, lisence_number, email, phone=None):
+    def create(cls, session, name, license_number, email, phone=None):
         if not name or len(name.strip()) < 2:
             raise ValueError("Name must be at least 2 characters long")
-        if not lisence_number or len(lisence_number.strip()) < 2:
-            raise ValueError("lisense number must be at least 2 characters long")
+        if not license_number or len(license_number.strip()) < 2:
+            raise ValueError("license number must be at least 2 characters long")
         
         if not cls.validate_email(email):
             raise ValueError("Invalid email format")
@@ -62,21 +62,26 @@ class Agent(Base):
         if existing:
             raise ValueError("Email already exists")
         
-        #check if lisense number already exists
-        existing = session.query(cls).filter_by(lisence_number = lisence_number).first()
+        #check if license number already exists
+        existing = session.query(cls).filter_by(license_number = license_number).first()
         if existing:
-            raise ValueError("lisence number already exists")
+            raise ValueError("license number already exists")
 
         
         agent = cls(
             name=name.strip(),
-            lisence_number = lisence_number.strip(),
+            license_number = license_number.strip(),
             email=email.strip(),
             phone=phone,
             
         )
         session.add(agent)
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+    
         return agent
     
     @classmethod
@@ -88,15 +93,15 @@ class Agent(Base):
         return session.query(cls).filter_by(id=agent_id).first()
     
     @classmethod
-    def find_by_lisence(cls, session, input_lisence):
-        return session.query(cls).filter_by(lisence_number=input_lisence).first()
+    def find_by_name(cls, session, name):
+       return session.query(cls).filter(cls.name.ilike(f"%{name}%")).all()
     
     def delete(self, session):
         session.delete(self)
         session.commit()
 
     def __repr__ (self):
-        return Agent(f"id={self.id}, name={self.name}, lisence= {self.lisense_number} email={self.email}")
+        return f"Agent(id={self.id}, name={self.name}, license= {self.license_number}, email={self.email})"
     
 
  
