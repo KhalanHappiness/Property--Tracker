@@ -57,5 +57,24 @@ class Listing(Base):
         session.add(listing)
         session.commit()
         return listing
+    
+    @classmethod
+    def get_all(cls, session):
+        return session.query(cls).all()
+    
+    @classmethod
+    def find_by_id(cls, session, listing_id):
+        return session.query(cls).filter_by(id = listing_id).first()
+    
+    @classmethod
+    def find_by_agent(cls, session, agent_id):
+        return session.query(cls).filter_by(agent_id = agent_id).all()
+    
+    def delete(self, session):
+        session.delete(self)
+        session.commit()
+
+    def __repre__(self):
+        return f"Listing(id = {self.id}, address={self.address}, price={self.price})"
         
 
