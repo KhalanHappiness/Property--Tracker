@@ -152,6 +152,104 @@ class PropertyTrackerCLI:
         else:
             print(f"Buyer with email '{email}' not found.")
 
+    # AGENT MANAGEMENT
+    def agent_management(self):
+        while True:
+            self.display_entity_menu("Agent")
+            choice = self.get_user_choice(6)
+            
+            if choice == 1:
+                self.create_agent()
+            elif choice == 2:
+                self.view_all_agents()
+            elif choice == 3:
+                self.find_agent_by_id()
+            elif choice == 4:
+                self.delete_agent()
+            elif choice == 5:
+                self.view_agent_related_objects()
+            elif choice == 6:
+                self.find_agent_by_attribute()
+            elif choice == 0:
+                break
+    
+    def create_agent(self):
+        print("\n--- CREATE AGENT ---")
+        try:
+            name = self.safe_input("Enter business name: ")
+            email = self.safe_input("Enter email: ")
+            license_number = self.safe_input("Enter license number: ")
+            phone = self.safe_input("Enter phone (optional): ", required=False)
+            
+            agent = Agent.create(self.session, name, email, license_number, phone)
+            print(f"agent created successfully!")
+            print(f"   {agent.full_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+    
+    def view_all_agents(self):
+        print("\n--- ALL AGENTS ---")
+        agents = Agent.get_all(self.session)
+        if not agents:
+            print("No agents found.")
+        else:
+            for agent in agents:
+                print(f"   {agent.full_info}")
+    
+    def find_agent_by_id(self):
+        print("\n--- FIND AGENT BY ID ---")
+        agent_id = self.safe_int_input("Enter agent ID: ")
+        agent = Agent.find_by_id(self.session, agent_id)
+        if agent:
+            print(f"agent found:")
+            print(f"   {agent.full_info}")
+        else:
+            print(f"agent with ID {agent_id} not found.")
+    
+    def delete_agent(self):
+        print("\n--- DELETE AGENT ---")
+        agent_id = self.safe_int_input("Enter agent ID to delete: ")
+        agent = Agent.find_by_id(self.session, agent_id)
+        if agent:
+            print(f"agent to delete: {agent.full_info}")
+            confirm = input("Are you sure? (yes/no): ").lower()
+            if confirm == 'yes':
+                agent.delete(self.session)
+                print("agent deleted successfully!")
+            else:
+                print("Deletion cancelled.")
+        else:
+            print(f"agent with ID {agent_id} not found.")
+    
+    def view_agent_related_objects(self):
+        print("\n--- AGENT RELATED OBJECTS ---")
+        agent_id = self.safe_int_input("Enter agent ID: ")
+        agent = Agent.find_by_id(self.session, agent_id)
+        if agent:
+            print(f"agent: {agent.full_info}")
+            print(f"\n Listings ({len(agent.listings)}):")
+            for listing in agent.listings:
+                price_str = f"${listing.price}" if listing.price else "Price TBD"
+                status = "Available" if listing.is_available else "Unavailable"
+                print(f"   - {listing.name} ({price_str}) - {status}")
+            print(f"\n Connected to ({len(agent.connections)} land buyers):")
+            for connection in agent.connections:
+                print(f"   - {connection.land_buyer.name} ({connection.land_buyer.email})")
+        else:
+            print(f"agent with ID {agent_id} not found.")
+    
+    def find_agent_by_attribute(self):
+        print("\n--- FIND AGENT BY NAME ---")
+        agent_name = self.safe_input("Enter agent name to search: ")
+        agents = Agent.find_by_name(self.session, agent_name)
+        if agents:
+            print(f"Found {len(agents)} agent(s):")
+            for agent in agents:
+                print(f"   {agent.full_info}")
+        else:
+            print(f"No agents found withname containing '{agent_name}'.")
+    
+
     
 
             
