@@ -47,10 +47,27 @@ class LandBuyer(Base):
         if existing:
             raise ValueError("Email already exists")
         
-        user = cls(name=name.strip(), email=email.strip(), phone=phone)
-        session.add(user)
+        land_buyer = cls(name=name.strip(), email=email.strip(), phone=phone)
+        session.add(land_buyer)
         session.commit()
-        return user
+        return land_buyer
+    @classmethod
+    def get_all(cls, session):
+        return session.query(cls).all()
+    
+    @classmethod
+    def find_by_id(cls, session, landbuyer_id):
+        return session.query(cls).filter_by(id = landbuyer_id).first()
+    @classmethod
+    def find_by_email(cls, session, input_email):
+        return session.query(cls).filter_by(email=input_email).first()
+    
+    def delete(self, session):
+        session.delete(self)
+        session.commit()
+
+    def __repr__(self):
+        return f"LandBuyer(id={self.id}, name={self.name}, email={self.email})"
     
     
 
