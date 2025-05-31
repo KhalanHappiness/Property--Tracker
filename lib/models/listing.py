@@ -16,3 +16,46 @@ class Listing(Base):
 
     agent = relationship("Agent", back_populates="listings")
 
+    @property
+    def full_info(self):
+        price_str = f"${self.price}" if self.price else "Price TBD"
+        status = "Available" if self.is_available else "Unavailable"
+        return f"Id: {self.id}, address: {self.address}, Price: {price_str}, Status: {status}, Agent: {self.agent.name}"
+    
+    @staticmethod
+    def validate_price(price):
+        if price is None:
+            return True
+        try:
+            price_float = float(price)
+            return price_float >= 0
+        except (ValueError, TypeError):
+            return False
+        
+    @classmethod
+    def create(cls, session, agent_id, address, size, price=None, description=None, is_available=True):
+        from .agent import Agent
+        if not address or len(address.strip()) < 5:
+            raise ValueError("address must be at least 5 characters long")
+        
+        # Validate mechanic exists
+        agent = Agent.find_by_id(session, agent_id)
+        if not agent:
+            raise ValueError(f"agent with ID {agent_id} not found")
+        
+        if price is not None and not cls.validate_price(price):
+            raise ValueError("Price must be a positive number")
+        
+        listing = cls(
+            agent_id=agent_id,
+            address=address.strip(),
+            price=float(price) if price is not None else None,
+            size = size,
+            descriptione = description,
+            is_available=bool(is_available)
+        )
+        session.add(listing)
+        session.commit()
+        return listing
+        
+
