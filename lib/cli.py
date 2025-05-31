@@ -2,7 +2,7 @@ from models.land_buyer import LandBuyer
 from models.agent import Agent
 from models.connection import Connection
 from models.listing import Listing
-from models.base import Base
+from models.base import Session
 
 class PropertyTrackerCLI:
 
@@ -16,7 +16,7 @@ class PropertyTrackerCLI:
         print("4. Listing Management")
         print("5. Exit")
         print("="*50)
-    def get_land_buyer_choice(self, max_choice):
+    def get_user_choice(self, max_choice):
         while True:
             try:
                 choice = int(input(f"Enter your choice (1-{max_choice}): "))
@@ -61,3 +61,97 @@ class PropertyTrackerCLI:
                 return float(value)
             except ValueError:
                 print("Please enter a valid number")
+
+    #Land Buyer Management
+    def land_buyer_management(self):
+        self.display_entity_menu("LandBuyer")
+        choice = self.get_user_choice(6)
+
+        if choice == 1:
+            self.create_land_buyer()
+        elif choice == 2:
+            self.view_all_land_buyers()
+        elif choice == 3:
+            self.find_land_buyer_by_id()
+        elif choice == 4:
+            self.delete_land_buyer()
+        elif choice == 5:
+            self.view_land_buyer_related_objects()
+        elif choice == 6:
+            self.find_land_buyer_by_attribute()
+        elif choice == 0:
+            return
+        
+    def create_land_buyer(self):
+        print("\n--- CREATE LAND BUYER ---")
+        try:
+            name = self.safe_input("Enter land buyer's name: ")
+            email = self.safe_input("Enter email: ")
+            phone = self.safe_input("Enter phone (optional): ", required=False)
+            
+            land_buyer = LandBuyer.create(self.session, name, email, phone)
+            print(f"Buyer created successfully!")
+            print(f"   {land_buyer.buyer_info}")
+        except ValueError as e:
+            print(f" Error: {e}")
+
+    def view_all_land_buyers(self):
+        print("\n--- ALL LAND BUYERS ---")
+        buyers = LandBuyer.get_all(self.session)
+        if not buyers:
+            print("No land buyers found.")
+        else:
+            for buyer in buyers:
+                print(f"   {buyer.buyer_info}")
+
+    def find_land_buyer_by_id(self):
+        print("\n--- FIND LAND BUYER BY ID ---")
+        land_buyer_id = self.safe_int_input("Enter user ID: ")
+        buyer = LandBuyer.find_by_id(self.session, land_buyer_id)
+        if buyer:
+            print(f"Land Buyer found:")
+            print(f"   {buyer.buyer_info}")
+        else:
+            print(f" User with ID {land_buyer_id} not found.")
+
+    def delete_land_buyer(self):
+        print("\n--- DELETE LAND BUYER ---")
+        land_buyer_id = self.safe_int_input("Enter buyer ID to delete: ")
+        buyer = LandBuyer.find_by_id(self.session, land_buyer_id)
+        if buyer:
+            print(f"land buyer to delete: {buyer.buyer_info}")
+            confirm = input("Are you sure? (yes/no): ").lower()
+            if confirm == 'yes':
+                buyer.delete(self.session)
+                print("Buyer deleted successfully!")
+            else:
+                print("Deletion cancelled.")
+        else:
+            print(f"Buyer with ID {land_buyer_id} not found.")
+    
+    def view_land_buyer_related_objects(self):
+        print("\n--- LAND BUYER RELATED OBJECTS ---")
+        land_buyer_id = self.safe_int_input("Enter land buyer ID: ")
+        buyer = LandBuyer.find_by_id(self.session, land_buyer_id)
+        if buyer:
+            print(f"Land Buyer: {buyer.buyer_info}")
+            print(f"\Connections ({len(buyer.connections)}):")
+            for connection in buyer.connections:
+                print(f"   - {connection.agent.name} ")
+           
+        else:
+            print(f"Buyer with ID {land_buyer_id} not found.")
+    
+    def find_land_buyer_by_attribute(self):
+        print("\n--- FIND LAND BUYER BY EMAIL ---")
+        email = self.safe_input("Enter email to search: ")
+        buyer = LandBuyer.find_by_email(self.session, email)
+        if buyer:
+            print(f"Buyer found:")
+            print(f"   {buyer.buyer_info}")
+        else:
+            print(f"Buyer with email '{email}' not found.")
+
+    
+
+            
