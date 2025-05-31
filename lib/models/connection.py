@@ -32,14 +32,18 @@ class Connection(Base):
         if not land_buyer:
             raise ValueError(f"Land buyer with ID {land_buyer_id} not found")
         
-        #check if connection already
+        #check if connection already exists
         existing = session.query(cls).filter_by(agent_id = agent_id, land_buyer_id = land_buyer_id).first()
         if existing:
             raise ValueError("This agent is already a land buyer connection")
         
         connection = cls(agent_id = agent_id, land_buyer_id = land_buyer_id)
         session.add(connection)
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
         return connection 
     
     @classmethod   
@@ -48,14 +52,22 @@ class Connection(Base):
     
     @classmethod
     def find_by_id(cls, session, connection_id):
-        return session.query(cls).filter_by(id = connection_id).all()
+        return session.query(cls).filter_by(id = connection_id).first()
+    
+    @classmethod
+    def find_by_agent_id(cls, session, agent_id):
+        return session.query(cls).filter_by(agent_id=agent_id).all()
+
+    @classmethod
+    def find_by_land_buyer_id(cls, session, land_buyer_id):
+        return session.query(cls).filter_by(land_buyer_id=land_buyer_id).all()
     
     def delete(self,session):
         session.delete(self)
         session.commit()
 
     def __repr__(self):
-        return f"Connection( agent_id={self.agent_id}, land_buyer_id = {self.land_buyer_id} )"
+        return f"Connection( id= {self.id}, agent_id={self.agent_id}, land_buyer_id = {self.land_buyer_id} )"
 
 
 
