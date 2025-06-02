@@ -1,3 +1,5 @@
+#Link to the presentation https://drive.google.com/file/d/1mLOcU_NAzqp3Ja2Hi0ZBiYvDmJUvngqf/view?usp=drive_link
+
 # Property Tracker 
 
 Property tracker is a command-line interface application for managing real estate properties, agents, land buyers, and their connections. Built with Python and SQLAlchemy ORM.
@@ -15,6 +17,7 @@ Property tracker is a command-line interface application for managing real estat
 ```
 property-tracker/
 ├── models/
+|   ├── __init__.py      # Convenience imports
 │   ├── base.py          # Database base configuration
 │   ├── land_buyer.py    # Land buyer model
 │   ├── agent.py         # Agent model
