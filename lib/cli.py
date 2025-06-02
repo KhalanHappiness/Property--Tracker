@@ -35,10 +35,11 @@ class PropertyTrackerCLI:
         print(f"1. Create {entity_name}")
         print(f"2. View All {entity_name}s")
         print(f"3. Find {entity_name} by ID")
-        print(f"4. Delete {entity_name}")
+        print(f"4. Update {entity_name}")
+        print(f"5. Delete {entity_name}")
         if entity_name in ["LandBuyer", "Agent"]:
-            print(f"5. View Related Objects")
-            print("6. Find by Attribute")
+            print(f"6. View Related Objects")
+            print("7. Find by Attribute")
         print("0. Back to Main Menu")
 
     def safe_input(self, prompt, required=True):
@@ -65,11 +66,38 @@ class PropertyTrackerCLI:
             except ValueError:
                 print("Please enter a valid number")
 
+    def get_optional_input(self, prompt, current_value):
+        """Get input with option to keep current value"""
+        full_prompt = f"{prompt} (current: {current_value}, press Enter to keep): "
+        new_value = input(full_prompt).strip()
+        return new_value if new_value else current_value
+
+    def get_optional_float_input(self, prompt, current_value):
+        """Get float input with option to keep current value"""
+        while True:
+            try:
+                full_prompt = f"{prompt} (current: {current_value}, press Enter to keep): "
+                new_value = input(full_prompt).strip()
+                if not new_value:
+                    return current_value
+                return float(new_value)
+            except ValueError:
+                print("Please enter a valid number")
+
+    def get_optional_bool_input(self, prompt, current_value):
+        """Get boolean input with option to keep current value"""
+        current_str = "yes" if current_value else "no"
+        full_prompt = f"{prompt} (current: {current_str}, press Enter to keep): "
+        new_value = input(full_prompt).strip().lower()
+        if not new_value:
+            return current_value
+        return new_value in ['y', 'yes']
+
     # LAND BUYER MANAGEMENT
     def land_buyer_management(self):
         while True:
             self.display_entity_menu("LandBuyer")
-            choice = self.get_user_choice(6)
+            choice = self.get_user_choice(7)
 
             if choice == 1:
                 self.create_land_buyer()
@@ -78,10 +106,12 @@ class PropertyTrackerCLI:
             elif choice == 3:
                 self.find_land_buyer_by_id()
             elif choice == 4:
-                self.delete_land_buyer()
+                self.update_land_buyer()
             elif choice == 5:
-                self.view_land_buyer_related_objects()
+                self.delete_land_buyer()
             elif choice == 6:
+                self.view_land_buyer_related_objects()
+            elif choice == 7:
                 self.find_land_buyer_by_attribute()
             elif choice == 0:
                 break
@@ -96,6 +126,32 @@ class PropertyTrackerCLI:
             land_buyer = LandBuyer.create(self.session, name, email, phone)
             print(f"Buyer created successfully!")
             print(f"   {land_buyer.buyer_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    def update_land_buyer(self):
+        print("\n--- UPDATE LAND BUYER ---")
+        land_buyer_id = self.safe_int_input("Enter land buyer ID to update: ")
+        buyer = LandBuyer.find_by_id(self.session, land_buyer_id)
+        
+        if not buyer:
+            print(f"Land buyer with ID {land_buyer_id} not found.")
+            return
+        
+        print(f"Current land buyer info: {buyer.buyer_info}")
+        print("\nEnter new values (press Enter to keep current value):")
+        
+        try:
+            # Get updated values
+            new_name = self.get_optional_input("Enter new name", buyer.name)
+            new_email = self.get_optional_input("Enter new email", buyer.email)
+            new_phone = self.get_optional_input("Enter new phone", buyer.phone or "None")
+            new_phone = new_phone if new_phone != "None" else None
+            
+            # Update the buyer
+            LandBuyer.update_by_id(self.session, land_buyer_id, name=new_name, email=new_email, phone=new_phone)
+            print(f"Land buyer updated successfully!")
+            print(f"   {buyer.buyer_info}")
         except ValueError as e:
             print(f"Error: {e}")
 
@@ -162,7 +218,7 @@ class PropertyTrackerCLI:
     def agent_management(self):
         while True:
             self.display_entity_menu("Agent")
-            choice = self.get_user_choice(6)
+            choice = self.get_user_choice(7)
             
             if choice == 1:
                 self.create_agent()
@@ -171,10 +227,12 @@ class PropertyTrackerCLI:
             elif choice == 3:
                 self.find_agent_by_id()
             elif choice == 4:
-                self.delete_agent()
+                self.update_agent()
             elif choice == 5:
-                self.view_agent_related_objects()
+                self.delete_agent()
             elif choice == 6:
+                self.view_agent_related_objects()
+            elif choice == 7:
                 self.find_agent_by_attribute()
             elif choice == 0:
                 break
@@ -189,6 +247,34 @@ class PropertyTrackerCLI:
             
             agent = Agent.create(self.session, name, license_number, email, phone)
             print(f"Agent created successfully!")
+            print(f"   {agent.full_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    def update_agent(self):
+        print("\n--- UPDATE AGENT ---")
+        agent_id = self.safe_int_input("Enter agent ID to update: ")
+        agent = Agent.find_by_id(self.session, agent_id)
+        
+        if not agent:
+            print(f"Agent with ID {agent_id} not found.")
+            return
+        
+        print(f"Current agent info: {agent.full_info}")
+        print("\nEnter new values (press Enter to keep current value):")
+        
+        try:
+            # Get updated values
+            new_name = self.get_optional_input("Enter new name", agent.name)
+            new_license = self.get_optional_input("Enter new license number", agent.license_number)
+            new_email = self.get_optional_input("Enter new email", agent.email)
+            new_phone = self.get_optional_input("Enter new phone", agent.phone or "None")
+            new_phone = new_phone if new_phone != "None" else None
+            
+            # Update the agent
+            Agent.update_by_id(self.session, agent_id, name=new_name, license_number=new_license, 
+                        email=new_email, phone=new_phone)
+            print(f"Agent updated successfully!")
             print(f"   {agent.full_info}")
         except ValueError as e:
             print(f"Error: {e}")
@@ -262,7 +348,7 @@ class PropertyTrackerCLI:
     def connections_management(self):
         while True:
             self.display_entity_menu("Connection")
-            choice = self.get_user_choice(4)
+            choice = self.get_user_choice(5)
             
             if choice == 1:
                 self.create_connection()
@@ -271,6 +357,8 @@ class PropertyTrackerCLI:
             elif choice == 3:
                 self.find_connection_by_id()
             elif choice == 4:
+                self.update_connection()
+            elif choice == 5:
                 self.delete_connection()
             elif choice == 0:
                 break
@@ -283,6 +371,35 @@ class PropertyTrackerCLI:
            
             connection = Connection.create(self.session, agent_id, land_buyer_id)
             print(f"Connection created successfully!")
+            print(f"   {connection.full_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    def update_connection(self):
+        print("\n--- UPDATE CONNECTION ---")
+        connection_id = self.safe_int_input("Enter connection ID to update: ")
+        connection = Connection.find_by_id(self.session, connection_id)
+        
+        if not connection:
+            print(f"Connection with ID {connection_id} not found.")
+            return
+        
+        print(f"Current connection info: {connection.full_info}")
+        print("\nEnter new values (press Enter to keep current value):")
+        
+        try:
+            # Get updated values
+            print(f"Current Agent ID: {connection.agent_id}")
+            new_agent_input = input("Enter new agent ID (press Enter to keep): ").strip()
+            new_agent_id = int(new_agent_input) if new_agent_input else connection.agent_id
+            
+            print(f"Current Land Buyer ID: {connection.land_buyer_id}")
+            new_buyer_input = input("Enter new land buyer ID (press Enter to keep): ").strip()
+            new_buyer_id = int(new_buyer_input) if new_buyer_input else connection.land_buyer_id
+            
+            # Update the connection
+            Connection.update_by_id(self.session, connection_id, agent_id=new_agent_id, land_buyer_id=new_buyer_id)
+            print(f"Connection updated successfully!")
             print(f"   {connection.full_info}")
         except ValueError as e:
             print(f"Error: {e}")
@@ -325,7 +442,7 @@ class PropertyTrackerCLI:
     def listings_management(self):
         while True:
             self.display_entity_menu("Listing")
-            choice = self.get_user_choice(4)
+            choice = self.get_user_choice(5)
             
             if choice == 1:
                 self.create_listing()
@@ -334,6 +451,8 @@ class PropertyTrackerCLI:
             elif choice == 3:
                 self.find_listing_by_id()
             elif choice == 4:
+                self.update_listing()
+            elif choice == 5:
                 self.delete_listing()
             elif choice == 0:
                 break
@@ -348,8 +467,46 @@ class PropertyTrackerCLI:
             description = self.safe_input("Enter description (optional): ", required=False)
             is_available = input("Is listing available? (y/n, default y): ").lower() != 'n'
             
-            listing = Listing.create(self.session, agent_id, address, size,price,  description, is_available)
+            listing = Listing.create(self.session, agent_id, address, size, price, description, is_available)
             print(f"Listing created successfully!")
+            print(f"   {listing.full_info}")
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    def update_listing(self):
+        print("\n--- UPDATE LISTING ---")
+        listing_id = self.safe_int_input("Enter listing ID to update: ")
+        listing = Listing.find_by_id(self.session, listing_id)
+        
+        if not listing:
+            print(f"Listing with ID {listing_id} not found.")
+            return
+        
+        print(f"Current listing info: {listing.full_info}")
+        print("\nEnter new values (press Enter to keep current value):")
+        
+        try:
+            # Get updated values
+            print(f"Current Agent ID: {listing.agent_id}")
+            new_agent_input = input("Enter new agent ID (press Enter to keep): ").strip()
+            new_agent_id = int(new_agent_input) if new_agent_input else listing.agent_id
+            
+            new_address = self.get_optional_input("Enter new address", listing.address)
+            new_size = self.get_optional_input("Enter new size", listing.size or "None")
+            new_size = new_size if new_size != "None" else None
+            
+            new_price = self.get_optional_float_input("Enter new price", listing.price)
+            
+            new_description = self.get_optional_input("Enter new description", listing.description or "None")
+            new_description = new_description if new_description != "None" else None
+            
+            new_is_available = self.get_optional_bool_input("Is listing available? (y/n)", listing.is_available)
+            
+            # Update the listing
+            Listing.update_by_id(self.session, listing_id, agent_id=new_agent_id, address=new_address, 
+                          size=new_size, price=new_price, description=new_description, 
+                          is_available=new_is_available)
+            print(f"Listing updated successfully!")
             print(f"   {listing.full_info}")
         except ValueError as e:
             print(f"Error: {e}")

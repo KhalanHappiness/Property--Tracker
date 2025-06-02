@@ -85,6 +85,66 @@ class Agent(Base):
         return agent
     
     @classmethod
+    def update_by_id(cls, session, agent_id, name=None, license_number=None, email=None, phone=None):
+        
+        agent = cls.find_by_id(session, agent_id)
+        if not agent:
+            raise ValueError(f"Agent with ID {agent_id} not found")
+        
+        # Validate name if provided
+        if name is not None:
+            if not name or len(name.strip()) < 2:
+                raise ValueError("Name must be at least 2 characters long")
+        
+        # Validate license number if provided
+        if license_number is not None:
+            if not license_number or len(license_number.strip()) < 2:
+                raise ValueError("License number must be at least 2 characters long")
+            
+            # Check if license number already exists (excluding current agent)
+            existing = session.query(cls).filter(
+                cls.license_number == license_number.strip(),
+                cls.id != agent.id
+            ).first()
+            if existing:
+                raise ValueError("License number already exists")
+        
+        # Validate email if provided
+        if email is not None:
+            if not cls.validate_email(email):
+                raise ValueError("Invalid email format")
+            
+            # Check if email already exists (excluding current agent)
+            existing = session.query(cls).filter(
+                cls.email == email.strip(),
+                cls.id != agent.id
+            ).first()
+            if existing:
+                raise ValueError("Email already exists")
+        
+        # Validate phone if provided
+        if phone is not None and phone and not cls.validate_phone(phone):
+            raise ValueError("Invalid phone format. Use XXX-XXX-XXXX, (XXX) XXX-XXXX, or XXXXXXXXXX")
+        
+        # Update fields if provided
+        if name is not None:
+            agent.name = name.strip()
+        if license_number is not None:
+            agent.license_number = license_number.strip()
+        if email is not None:
+            agent.email = email.strip()
+        if phone is not None:
+            agent.phone = phone
+        
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        
+        return agent
+    
+    @classmethod
     def get_all(cls, session):
         return session.query(cls).all()
     

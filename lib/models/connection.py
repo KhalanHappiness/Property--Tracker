@@ -56,6 +56,56 @@ class Connection(Base):
             raise e
         return connection 
     
+
+    @classmethod
+    def update_by_id(cls, session, connection_id, agent_id=None, land_buyer_id=None):
+       
+        from .agent import Agent
+        from .land_buyer import LandBuyer
+        
+        connection = cls.find_by_id(session, connection_id)
+        if not connection:
+            raise ValueError(f"Connection with ID {connection_id} not found")
+        
+        # Validate agent_id if provided
+        if agent_id is not None:
+            agent = Agent.find_by_id(session, agent_id)
+            if not agent:
+                raise ValueError(f"Agent with ID {agent_id} not found")
+        
+        # Validate land_buyer_id if provided
+        if land_buyer_id is not None:
+            land_buyer = LandBuyer.find_by_id(session, land_buyer_id)
+            if not land_buyer:
+                raise ValueError(f"Land buyer with ID {land_buyer_id} not found")
+        
+        # Check if the updated connection would create a duplicate
+        new_agent_id = agent_id if agent_id is not None else connection.agent_id
+        new_land_buyer_id = land_buyer_id if land_buyer_id is not None else connection.land_buyer_id
+        
+        existing = session.query(cls).filter(
+            cls.agent_id == new_agent_id,
+            cls.land_buyer_id == new_land_buyer_id,
+            cls.id != connection.id
+        ).first()
+        if existing:
+            raise ValueError("This agent-land buyer connection already exists")
+        
+        # Update fields if provided
+        if agent_id is not None:
+            connection.agent_id = agent_id
+        if land_buyer_id is not None:
+            connection.land_buyer_id = land_buyer_id
+        
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        
+        return connection
+    
+    
     @classmethod   
     def get_all(cls, session):
         return session.query(cls).all()

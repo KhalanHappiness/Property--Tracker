@@ -49,8 +49,60 @@ class LandBuyer(Base):
         
         land_buyer = cls(name=name.strip(), email=email.strip(), phone=phone)
         session.add(land_buyer)
-        session.commit()
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
         return land_buyer
+    
+   
+    @classmethod
+    def update_by_id(cls, session, landbuyer_id, name=None, email=None, phone=None):
+        
+        land_buyer = cls.find_by_id(session, landbuyer_id)
+        if not land_buyer:
+            raise ValueError(f"Land buyer with ID {landbuyer_id} not found")
+        
+        # Validate name if provided
+        if name is not None:
+            if not name or len(name.strip()) < 2:
+                raise ValueError("Name must be at least 2 characters long")
+        
+        # Validate email if provided
+        if email is not None:
+            if not cls.validate_email(email):
+                raise ValueError("Invalid email format")
+            
+            # Check if email already exists (excluding current land buyer)
+            existing = session.query(cls).filter(
+                cls.email == email.strip(),
+                cls.id != land_buyer.id
+            ).first()
+            if existing:
+                raise ValueError("Email already exists")
+        
+        # Validate phone if provided
+        if phone is not None and phone and not cls.validate_phone(phone):
+            raise ValueError("Invalid phone format. Use XXX-XXX-XXXX, (XXX) XXX-XXXX, or XXXXXXXXXX")
+        
+        # Update fields if provided
+        if name is not None:
+            land_buyer.name = name.strip()
+        if email is not None:
+            land_buyer.email = email.strip()
+        if phone is not None:
+            land_buyer.phone = phone
+        
+        try:
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        
+        return land_buyer       
+    
+
     @classmethod
     def get_all(cls, session):
         return session.query(cls).all()
